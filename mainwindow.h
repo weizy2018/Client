@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QModelIndex>
 
 namespace Ui {
 class MainWindow;
@@ -16,9 +17,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_loginPage_clicked();
-
-    void on_settingPage_clicked();
+    void on_tableWidget_clicked(const QModelIndex &index);
 
 private:
     Ui::MainWindow *ui;
