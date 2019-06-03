@@ -42,7 +42,7 @@ void LoginWindow::on_loginButton_clicked()
     int result = ::connect(Utils::getInstance()->sockedfd, (struct sockaddr *)&address, sizeof(address));
     if (result == -1) {
         qDebug("connect fail!!!");
-        ui->state->setText(QString::fromUtf8("登录失败！！！"));
+        ui->state->setText(QString::fromUtf8("网络连接错误！！！"));
         return;
     }
 
@@ -52,7 +52,7 @@ void LoginWindow::on_loginButton_clicked()
     QString password = ui->password->text();
 
     array = account.toLatin1();
-    memcpy(u.account, array.data(), account.length());
+    strcpy(u.account, array.data());
 
     array = password.toLatin1();
     strcpy(u.password, array.data());
@@ -67,9 +67,17 @@ void LoginWindow::on_loginButton_clicked()
         return;
     }
 
-
+    void * loginFlag;
     pthread_join(send_thread, NULL);
-    pthread_join(rec_thread, NULL);
+    pthread_join(rec_thread, &loginFlag);
+
+    char * ch = (char*)loginFlag;
+    qDebug(ch);
+
+    if (strcmp(ch, LOGIN_SUCCESS) != 0) {
+        ui->state->setText(QString::fromUtf8("账号或密码错误！！！"));
+        return;
+    }
 
     MainWindow * m = new MainWindow;
     m->show();
@@ -86,9 +94,17 @@ void * sendLoginMessage(void * user)
     content.type = LOGIN_ACTION;
     strcpy(content.receiver, u.password);
     strcpy(content.sender, u.account);
+
     write(Utils::getInstance()->sockedfd, &content, sizeof(content));
     return NULL;
 }
 void * getLoginMessage(void *) {
+    char * result = new char[10];
+    read(Utils::getInstance()->sockedfd, result, 10);
+    return result;
+}
+
+void LoginWindow::on_registerLabel_linkActivated(const QString &link)
+{
 
 }

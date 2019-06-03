@@ -3,13 +3,14 @@
 
 #include <string>
 
-#define LOGIN_ACTION            0
-#define SEND_MESSAGE_ACTION     1
+#define LOGIN_ACTION            1
+#define SEND_MESSAGE_ACTION     2
+#define EXIT_ACTION             3
 
 #define TYPE_LENGTH             6
-#define ACCOUNT_LENGTH          21
-#define PASSWORD_LENGTH         21
-#define MESSAGE_LENGTH          150
+#define ACCOUNT_LENGTH          16
+#define PASSWORD_LENGTH         16
+#define MESSAGE_LENGTH          205
 
 #define PORT                    6688
 #define SERVER_ADDR             "127.0.0.1"

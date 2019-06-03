@@ -19,6 +19,8 @@ private slots:
     void on_loginButton_clicked();
 
 
+    void on_registerLabel_linkActivated(const QString &link);
+
 private:
     Ui::LoginWindow *ui;
 };
