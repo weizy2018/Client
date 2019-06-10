@@ -78,6 +78,9 @@ void LoginWindow::on_loginButton_clicked()
         ui->state->setText(QString::fromUtf8("账号或密码错误！！！"));
         return;
     }
+    //登录成功, 将用户的账号和密码保存起来
+    strcpy(Utils.getInstance()->user, account.toStdString().c_str());
+    strcpy(Utils.getInstance()->password, password.toStdString().c_str());
 
     MainWindow * m = new MainWindow;
     m->show();
@@ -88,7 +91,7 @@ void * sendLoginMessage(void * user)
 {
     User u = *(User*)user;
 
-    SendContext content;
+    SendContent content;
     memset(&content, 0, sizeof(content));
 
     content.type = LOGIN_ACTION;

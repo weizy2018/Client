@@ -74,27 +74,20 @@
     <column/>
     <column/>
    </widget>
-   <widget class="QTableView" name="tableView">
+   <widget class="QLabel" name="chatingFriend">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>30</y>
-      <width>381</width>
-      <height>241</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>330</x>
+      <x>176</x>
       <y>0</y>
-      <width>67</width>
-      <height>17</height>
+      <width>371</width>
+      <height>20</height>
      </rect>
     </property>
     <property name="text">
      <string>TextLabel</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QPlainTextEdit" name="plainTextEdit">
@@ -121,6 +114,16 @@
     </property>
     <property name="text">
      <string>发送</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="plainTextEdit_2">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>30</y>
+      <width>381</width>
+      <height>241</height>
+     </rect>
     </property>
    </widget>
   </widget>
