@@ -79,8 +79,8 @@ void LoginWindow::on_loginButton_clicked()
         return;
     }
     //登录成功, 将用户的账号和密码保存起来
-    strcpy(Utils.getInstance()->user, account.toStdString().c_str());
-    strcpy(Utils.getInstance()->password, password.toStdString().c_str());
+    strcpy(Utils::getInstance()->user, account.toStdString().c_str());
+    strcpy(Utils::getInstance()->password, password.toStdString().c_str());
 
     MainWindow * m = new MainWindow;
     m->show();

@@ -3,6 +3,10 @@
 
 #include <QMainWindow>
 #include <QModelIndex>
+#include <QLabel>
+#include <map>
+
+using namespace std;
 
 namespace Ui {
 class MainWindow;
@@ -11,6 +15,7 @@ class MainWindow;
 class MainWindow;
 
 int getFriendsList(MainWindow *);
+int getUnreceiveMessage(MainWindow *);
 void * getServerMsg(void *);
 
 class MainWindow : public QMainWindow
@@ -28,10 +33,20 @@ private slots:
 
 public:
     friend int getFriendsList(MainWindow *);
+    friend int getUnreceiveMessage(MainWindow *);
     friend void * getServerMsg(void *);
+
+public:
+    void addMessage(char * sender, char * msg, char * t);
 
 private:
     Ui::MainWindow *ui;
+
+    //QLabel * statusBarLabel;
+
+private:
+    map<string, QString> dialogue;   //<userid, message>
+    map<string, int> count;
 };
 
 #endif // MAINWINDOW_H
