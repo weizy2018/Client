@@ -34,15 +34,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->chatingFriend->setText("");
 
     //处理客户端发来的消息
-    pthread_t pid;
-    pthread_create(&pid, 0, getServerMsg, this);
+    thread = new ReadThread(this);
+    thread->start();
 
+    connect(thread, SIGNAL(sendText(QString)), this, SLOT(appendText(QString)));
 
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete thread;
 }
 
 /*
@@ -78,28 +80,13 @@ void MainWindow::on_tableWidget_clicked(const QModelIndex &index)
 
         ui->plainTextEdit_2->setPlainText(dialogue[item1->text().toStdString()]);
 
-        //将光标放置文本末尾
-        /*
-        QTextCursor cursor = ui->plainTextEdit_2->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        ui->plainTextEdit_2->setTextCursor(cursor);*/
-
-        //ui->plainTextEdit_2->moveCursor(QTextCursor::End);
-        /*
-
-        QScrollBar *scrollbar = ui.taskStatusTextEdit->verticalScrollBar();
-        11     if (scrollbar)
-        12     {
-        13         scrollbar->setSliderPosition(scrollbar->maximum());
-        14     }
-          */
-        /*
+        //滑动滚动条到文本末尾
         QScrollBar * sc = ui->plainTextEdit_2->verticalScrollBar();
         if (sc) {
             sc->setSliderPosition(sc->maximum());
 
         }
-        */
+
         if (item2->text() != "") {
             item2->setText("");
             count[item1->text().toStdString()] = 0;
@@ -133,9 +120,7 @@ void MainWindow::on_pushButton_clicked()
 
         } else {
             ui->plainTextEdit_2->appendPlainText(QString::fromUtf8("\n我  ") + QString::fromStdString(currentTime));
-            //ui->plainTextEdit_2->appendPlainText(QString::fromStdString(currentTime));
             ui->plainTextEdit_2->appendPlainText(msg);
-            //ui->plainTextEdit_2->appendPlainText("");
 
             ui->plainTextEdit->clear();
         }
@@ -154,67 +139,34 @@ void MainWindow::addMessage(char * sender, char * msg, char * t) {
 
     dialogue[sender] += str;
 }
+void MainWindow::addMessage(QString sender, QString msg, char * t) {
+    QString str("\n");
+    str.append(sender);
+    str.append("  ");
+    str.append(t);
+    str.append("\n");
+    str.append(msg);
+    str.append("\n");
+    dialogue[sender.toStdString()] += str;
 
-//获取用户列表
-int getFriendsList(MainWindow * window) {
-
-    friends f;
-    if (read(Utils::getInstance()->sockedfd, &f, sizeof(f)) == 0) {
-        return -1;
-    }
-    while (f.flag != END_FLAG) {
-        qDebug(f.friendid);
-        int rowcount = window->ui->tableWidget->rowCount();
-        window->ui->tableWidget->insertRow(rowcount);
-        QTableWidgetItem * item = new QTableWidgetItem(f.friendid);
-        window->ui->tableWidget->setItem(rowcount, 0, item);
-        QTableWidgetItem * item2 = new QTableWidgetItem("");
-        window->ui->tableWidget->setItem(rowcount, 1, item2);
-
-        //在初始化好友列表的时候顺便把相应的数据结构也初始化了
-        window->dialogue.insert(pair<string, QString>(f.friendid, ""));
-        window->count.insert(pair<string, int>(f.friendid, 0));
-
-        if (read(Utils::getInstance()->sockedfd, &f, sizeof(f)) == 0) {
-            return -1;
-        }
-    }
-    return 0;
 }
 
-int getUnreceiveMessage(MainWindow * window) {
-
-    SendContent content;
-    if (read(Utils::getInstance()->sockedfd, &content, sizeof(content)) == 0) {
-        return -1;
-    }
-    while (content.type != END_FLAG) {
-        window->addMessage(content.sender, content.message, content.sendTime);
-        window->count[content.sender]++;
-        if (read(Utils::getInstance()->sockedfd, &content, sizeof(content)) == 0) {
-            return -1;
-        }
-    }
-
-    return 0;
+void MainWindow::appendText(QString text) {
+    ui->plainTextEdit_2->appendPlainText(text);
 }
 
-//接受服务器端发来的消息
-void * getServerMsg(void * w) {
-    MainWindow * window = (MainWindow*)w;
-    getFriendsList(window);
-    getUnreceiveMessage(window);
-    /*
-    qDebug("==================");
-    for (auto it = window->dialogue.begin(); it != window->dialogue.end(); it++) {
-        qDebug() << QString::fromStdString(it->first) << " " << it->second;
-    }*/
+ReadThread::ReadThread(MainWindow * obj): win(obj) {
 
-    int row_count =  window->ui->tableWidget->rowCount();
+}
+void ReadThread::run() {
+    getFriendsList();
+    getUnreceiveMessage();
+
+    int row_count =  win->ui->tableWidget->rowCount();
     for (int i = 0; i < row_count; i++) {
-        QTableWidgetItem * item1 = window->ui->tableWidget->item(i, 0);
-        QTableWidgetItem * item2 = window->ui->tableWidget->item(i, 1);
-        int cnt = window->count[item1->text().toStdString()];
+        QTableWidgetItem * item1 = win->ui->tableWidget->item(i, 0);
+        QTableWidgetItem * item2 = win->ui->tableWidget->item(i, 1);
+        int cnt = win->count[item1->text().toStdString()];
         if (cnt != 0) {
             item2->setText(QString::number(cnt));
         }
@@ -222,7 +174,7 @@ void * getServerMsg(void * w) {
     //监听在线时接收到的消息，此时服务端不再保存别的用户发来的消息
     //...
     SendContent content;
-    while (read(Utils::getInstance()->sockedfd, &content, sizeof(content)) != 0) {
+    while (::read(Utils::getInstance()->sockedfd, &content, sizeof(content)) != 0) {
         QString str("\n");
         str.append(QString::fromUtf8(content.sender));
         str.append("  ");
@@ -234,30 +186,61 @@ void * getServerMsg(void * w) {
 
         //不是正在聊天的人发来消息
         //先保存到相应的数据结构中，然后显示未读消息数量
-        if (content.sender != window->ui->chatingFriend->text()) {
-            window->dialogue[content.sender].append(str);
-            window->count[content.sender]++;
+        if (content.sender != win->ui->chatingFriend->text()) {
+            win->dialogue[content.sender].append(str);
+            win->count[content.sender]++;
 
-            int row_count =  window->ui->tableWidget->rowCount();
+            int row_count =  win->ui->tableWidget->rowCount();
             for (int i = 0; i < row_count; i++) {
-                QTableWidgetItem * item1 = window->ui->tableWidget->item(i, 0);
-                QTableWidgetItem * item2 = window->ui->tableWidget->item(i, 1);
+                QTableWidgetItem * item1 = win->ui->tableWidget->item(i, 0);
+                QTableWidgetItem * item2 = win->ui->tableWidget->item(i, 1);
                 if (item1->text() == content.sender) {
-                    item2->setText(QString::number(window->count[content.sender]));
+                    item2->setText(QString::number(win->count[content.sender]));
                     break;
                 }
             }
         } else {
             //直接显示出来
-            //window->ui->plainTextEdit_2->appendPlainText(str);
-            window->append(str);
+            emit sendText(str);
         }
     }
-    return NULL;
+
 }
 
-void MainWindow::append(const QString text) {
-    ui->plainTextEdit_2->appendPlainText(text);
+void ReadThread::getFriendsList() {
+    friends f;
+    if (read(Utils::getInstance()->sockedfd, &f, sizeof(f)) == 0) {
+        return;
+    }
+    while (f.flag != END_FLAG) {
+        int rowcount = win->ui->tableWidget->rowCount();
+        win->ui->tableWidget->insertRow(rowcount);
+        QTableWidgetItem * item = new QTableWidgetItem(f.friendid);
+        win->ui->tableWidget->setItem(rowcount, 0, item);
+        QTableWidgetItem * item2 = new QTableWidgetItem("");
+        win->ui->tableWidget->setItem(rowcount, 1, item2);
+
+        //在初始化好友列表的时候顺便把相应的数据结构也初始化了
+        win->dialogue.insert(pair<string, QString>(f.friendid, ""));
+        win->count.insert(pair<string, int>(f.friendid, 0));
+
+        if (read(Utils::getInstance()->sockedfd, &f, sizeof(f)) == 0) {
+            return;
+        }
+    }
+}
+void ReadThread::getUnreceiveMessage() {
+    SendContent content;
+    if (read(Utils::getInstance()->sockedfd, &content, sizeof(content)) == 0) {
+        return;
+    }
+    while (content.type != END_FLAG) {
+        win->addMessage(QString::fromUtf8(content.sender), QString::fromUtf8(content.message), content.sendTime);
+        win->count[content.sender]++;
+        if (read(Utils::getInstance()->sockedfd, &content, sizeof(content)) == 0) {
+            return;
+        }
+    }
 }
 
 
