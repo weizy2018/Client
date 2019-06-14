@@ -135,10 +135,10 @@ void MainWindow::on_pushButton_clicked()
             ui->statusBar->showMessage(QString::fromUtf8("发送失败，请检查网络后重试"), 5000);
 
         } else {
-            ui->plainTextEdit_2->appendPlainText(QString::fromUtf8("我  ") + QString::fromStdString(currentTime));
+            ui->plainTextEdit_2->appendPlainText(QString::fromUtf8("\n我  ") + QString::fromStdString(currentTime));
             //ui->plainTextEdit_2->appendPlainText(QString::fromStdString(currentTime));
             ui->plainTextEdit_2->appendPlainText(msg);
-            ui->plainTextEdit_2->appendPlainText("");
+            //ui->plainTextEdit_2->appendPlainText("");
 
             ui->plainTextEdit->clear();
         }
@@ -227,11 +227,13 @@ void * getServerMsg(void * w) {
     SendContent content;
     while (read(Utils::getInstance()->sockedfd, &content, sizeof(content)) != 0) {
         QString str("\n");
-        str.append(content.sender);
+        str.append(QString::fromUtf8(content.sender));
         str.append("  ");
         str.append(content.sendTime);
         str.append("\n");
-        str.append(content.message);
+        str.append(QString::fromUtf8(content.message));
+
+        //QString rec = QString::fromUtf8(str);
 
         //不是正在聊天的人发来消息
         //先保存到相应的数据结构中，然后显示未读消息数量
