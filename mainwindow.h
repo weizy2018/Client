@@ -38,6 +38,7 @@ public:
 
 public:
     void addMessage(char * sender, char * msg, char * t);
+    void append(const QString text);
 
 private:
     Ui::MainWindow *ui;

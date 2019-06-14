@@ -33,9 +33,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->chatingFriend->setText("");
 
-    //statusBarLabel = new QLabel("");
-    //ui->statusBar->addWidget(statusBarLabel);
-
     //处理客户端发来的消息
     pthread_t pid;
     pthread_create(&pid, 0, getServerMsg, this);
@@ -252,12 +249,16 @@ void * getServerMsg(void * w) {
             }
         } else {
             //直接显示出来
-            window->ui->plainTextEdit_2->appendPlainText(str);
+            //window->ui->plainTextEdit_2->appendPlainText(str);
+            window->append(str);
         }
     }
     return NULL;
 }
 
+void MainWindow::append(const QString text) {
+    ui->plainTextEdit_2->appendPlainText(text);
+}
 
 
 
