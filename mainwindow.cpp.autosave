@@ -171,8 +171,7 @@ void ReadThread::run() {
             item2->setText(QString::number(cnt));
         }
     }
-    //监听在线时接收到的消息，此时服务端不再保存别的用户发来的消息
-    //...
+    //循环等待接收服务器端发来的消息，此时服务端不再保存别的用户发来的消息
     SendContent content;
     while (::read(Utils::getInstance()->sockedfd, &content, sizeof(content)) != 0) {
         QString str("\n");
@@ -181,8 +180,6 @@ void ReadThread::run() {
         str.append(content.sendTime);
         str.append("\n");
         str.append(QString::fromUtf8(content.message));
-
-        //QString rec = QString::fromUtf8(str);
 
         //不是正在聊天的人发来消息
         //先保存到相应的数据结构中，然后显示未读消息数量
@@ -201,18 +198,20 @@ void ReadThread::run() {
                 }
             }
         } else {
-            //直接显示出来
+            //直接在聊天窗口显示内容
             emit sendText(str);
         }
     }
 
 }
 
+//获取好友列表
 void ReadThread::getFriendsList() {
     friends f;
     if (read(Utils::getInstance()->sockedfd, &f, sizeof(f)) == 0) {
         return;
     }
+    //循环读取服务器端发来的好友列表，直到接收到结束标志
     while (f.flag != END_FLAG) {
         int rowcount = win->ui->tableWidget->rowCount();
         win->ui->tableWidget->insertRow(rowcount);
@@ -230,11 +229,13 @@ void ReadThread::getFriendsList() {
         }
     }
 }
+//接收离线时好友发来的消息
 void ReadThread::getUnreceiveMessage() {
     SendContent content;
     if (read(Utils::getInstance()->sockedfd, &content, sizeof(content)) == 0) {
         return;
     }
+    //循环接收直到收到结束标志
     while (content.type != END_FLAG) {
         win->addMessage(QString::fromUtf8(content.sender), QString::fromUtf8(content.message), content.sendTime);
         win->count[content.sender]++;

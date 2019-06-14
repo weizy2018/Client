@@ -32,6 +32,9 @@ void * getLoginMessage(void *);
 
 void LoginWindow::on_loginButton_clicked()
 {
+    //客户端
+    //当点击登录按钮后新建socket对象，并将该对象放在Utils的sockedfd中，
+    //由于Utils使用单例模式创建，可以方便地在其他类中使用该socket对象
     struct sockaddr_in address;
     Utils::getInstance()->sockedfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -39,7 +42,9 @@ void LoginWindow::on_loginButton_clicked()
     address.sin_addr.s_addr = inet_addr(SERVER_ADDR);
     address.sin_port = htons(PORT);
 
+    //连接服务端
     int result = ::connect(Utils::getInstance()->sockedfd, (struct sockaddr *)&address, sizeof(address));
+    //无法连接时显示出错信息
     if (result == -1) {
         qDebug("connect fail!!!");
         ui->state->setText(QString::fromUtf8("网络连接错误！！！"));
@@ -87,6 +92,7 @@ void LoginWindow::on_loginButton_clicked()
     this->close();
 }
 
+//将账号和密码发送到客户端用于验证登录
 void * sendLoginMessage(void * user)
 {
     User u = *(User*)user;
@@ -101,6 +107,7 @@ void * sendLoginMessage(void * user)
     write(Utils::getInstance()->sockedfd, &content, sizeof(content));
     return NULL;
 }
+//获取登录时服务端反馈的信息:失败/成功
 void * getLoginMessage(void *) {
     char * result = new char[10];
     read(Utils::getInstance()->sockedfd, result, 10);
