@@ -2,6 +2,8 @@
 #include "ui_loginwindow.h"
 #include "mainwindow.h"
 #include "utils.h"
+#include "registerwindow.h"
+
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -77,12 +79,13 @@ void LoginWindow::on_loginButton_clicked()
     pthread_join(rec_thread, &loginFlag);
 
     char * ch = (char*)loginFlag;
-    qDebug(ch);
 
     if (strcmp(ch, LOGIN_SUCCESS) != 0) {
         ui->state->setText(QString::fromUtf8("账号或密码错误！！！"));
         return;
     }
+    free(ch);
+
     //登录成功, 将用户的账号和密码保存起来
     strcpy(Utils::getInstance()->user, account.toStdString().c_str());
     strcpy(Utils::getInstance()->password, password.toStdString().c_str());
@@ -114,7 +117,10 @@ void * getLoginMessage(void *) {
     return result;
 }
 
-void LoginWindow::on_registerLabel_linkActivated(const QString &link)
+//注册
+void LoginWindow::on_pushButton_clicked()
 {
-
+    Registerwindow * res = new Registerwindow();
+    res->show();
+    this->close();
 }

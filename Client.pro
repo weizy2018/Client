@@ -28,15 +28,20 @@ SOURCES += \
         mainwindow.cpp \
     loginwindow.cpp \
     settingwindow.cpp \
-    utils.cpp
+    utils.cpp \
+    registerwindow.cpp \
+    mylabel.cpp
 
 HEADERS += \
         mainwindow.h \
     loginwindow.h \
     settingwindow.h \
-    utils.h
+    utils.h \
+    registerwindow.h \
+    mylabel.h
 
 FORMS += \
         mainwindow.ui \
     loginwindow.ui \
-    settingwindow.ui
+    settingwindow.ui \
+    registerwindow.ui
